@@ -29,5 +29,15 @@ class ChaosEngineTests {
 
         result.bodyAsText() shouldBe "misbehaved"
     }
+
+    @Test
+    fun `restore behaviour after misbehaving`() = runTest {
+        engine.misbehave { _, _ -> respondOk("misbehaved") }
+        engine.behave()
+
+        val result = client.request(anyRequest())
+
+        result.bodyAsText() shouldBe "delegated"
+    }
 }
 

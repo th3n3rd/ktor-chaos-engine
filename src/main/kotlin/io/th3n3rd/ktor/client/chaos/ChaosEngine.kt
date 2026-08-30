@@ -10,7 +10,7 @@ class ChaosEngine(
     private val delegate: HttpClientEngine,
     override val config: HttpClientEngineConfig = HttpClientEngineConfig(),
 ) : HttpClientEngineBase("ktor-chaos-engine") {
-    private var stage = NoOp().applied(Always())
+    private var stage = defaultBehaviour
 
     @InternalAPI
     override suspend fun execute(data: HttpRequestData): HttpResponseData {
@@ -22,5 +22,13 @@ class ChaosEngine(
 
     fun misbehave(behaviour: ChaosBehaviour) {
         stage = behaviour.applied(Always())
+    }
+
+    fun behave() {
+        stage = defaultBehaviour
+    }
+
+    companion object {
+        val defaultBehaviour = NoOp().applied(Always())
     }
 }
