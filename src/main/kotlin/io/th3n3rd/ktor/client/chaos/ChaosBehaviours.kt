@@ -1,10 +1,12 @@
 package io.th3n3rd.ktor.client.chaos
 
 import io.ktor.client.engine.*
-import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.util.date.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.charsets.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.time.delay
 import java.time.Duration
@@ -21,8 +23,15 @@ object ChaosBehaviours {
 
     @OptIn(InternalAPI::class)
     object ReturnStatus {
-        operator fun invoke(status: HttpStatusCode) = ChaosBehaviour { request, _ ->
-            MockRequestHandleScope(callContext()).respond("", status)
+        operator fun invoke(status: HttpStatusCode) = ChaosBehaviour { _, _ ->
+            HttpResponseData(
+                status,
+                GMTDate(),
+                headersOf(),
+                HttpProtocolVersion.HTTP_1_1,
+                ByteReadChannel("".toByteArray(Charsets.UTF_8)),
+                callContext()
+            )
         }
     }
 
