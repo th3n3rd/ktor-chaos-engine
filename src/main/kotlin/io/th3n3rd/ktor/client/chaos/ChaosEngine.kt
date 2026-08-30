@@ -20,8 +20,10 @@ class ChaosEngine(
         }
     }
 
-    fun misbehave(behaviour: ChaosBehaviour) {
-        stage = behaviour.applied(Always())
+    fun misbehave(behaviour: ChaosBehaviour) = misbehave(behaviour.applied(Always()))
+
+    fun misbehave(stage: ChaosStage) {
+        this.stage = stage
     }
 
     fun behave() {
