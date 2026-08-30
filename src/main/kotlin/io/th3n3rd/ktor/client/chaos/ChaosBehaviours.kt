@@ -38,4 +38,10 @@ object ChaosBehaviours {
             )
         }
     }
+
+    object ThrowException {
+        operator fun invoke(e: Throwable = RuntimeException("something went wrong!")) = ChaosBehaviour { _, _ ->
+            throw e
+        }
+    }
 }
