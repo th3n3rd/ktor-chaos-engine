@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test
 
 class ChaosEngineTests {
 
+    private val delegate = MockEngine { respondOk("delegated") }
+    private val engine = ChaosEngine(delegate = delegate)
+    private val client = HttpClient(engine)
+
     @Test
     fun `delegates by default when behaves normally`() = runTest {
-        val delegate = MockEngine { respondOk("delegated") }
-        val engine = ChaosEngine(delegate = delegate)
-        val client = HttpClient(engine)
-
         val response = client.request(anyRequest())
 
         response.bodyAsText() shouldBe "delegated"
@@ -23,11 +23,7 @@ class ChaosEngineTests {
 
     @Test
     fun `applies given behaviour when misbehaves`() = runTest {
-        val delegate = MockEngine { respondOk("delegated") }
-        val engine = ChaosEngine(delegate = delegate).apply {
-            misbehave { _, _ -> respondOk("misbehaved") }
-        }
-        val client = HttpClient(engine)
+        engine.misbehave { _, _ -> respondOk("misbehaved") }
 
         val result = client.request(anyRequest())
 

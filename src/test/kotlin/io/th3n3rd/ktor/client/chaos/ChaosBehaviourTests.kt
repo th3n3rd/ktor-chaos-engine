@@ -13,14 +13,13 @@ import org.junit.jupiter.api.Test
 
 class ChaosBehaviourTests {
 
+    private val delegate = MockEngine { respondOk("delegated") }
+    private val engine = ChaosEngine(delegate)
+    private val client = HttpClient(engine)
+
     @Test
     fun `no behaviour applied`() = runTest {
-        val delegate = MockEngine { respondOk("delegated") }
-        val client = HttpClient(
-            ChaosEngine(delegate).apply {
-                misbehave(NoOp())
-            }
-        )
+        engine.misbehave(NoOp())
 
         val response = client.request(anyRequest())
 
@@ -29,12 +28,7 @@ class ChaosBehaviourTests {
 
     @Test
     fun `returns specified status`() = runTest {
-        val delegate = MockEngine { respondOk("delegated") }
-        val client = HttpClient(
-            ChaosEngine(delegate = delegate).apply {
-                misbehave(ReturnStatus(BadRequest))
-            }
-        )
+        engine.misbehave(ReturnStatus(BadRequest))
 
         val response = client.request(anyRequest())
 
