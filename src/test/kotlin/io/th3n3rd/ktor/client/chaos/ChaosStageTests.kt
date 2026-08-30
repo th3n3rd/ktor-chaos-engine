@@ -6,6 +6,9 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.HttpMethod.Companion.Post
+import io.ktor.http.HttpStatusCode.Companion.BadGateway
+import io.ktor.http.HttpStatusCode.Companion.GatewayTimeout
+import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.http.HttpStatusCode.Companion.ServiceUnavailable
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
@@ -29,6 +32,21 @@ class ChaosStageTests {
         client.get(anyRequest()).status shouldBe ServiceUnavailable
         client.post(anyRequest()).bodyAsText() shouldBe "delegated"
         client.get(anyRequest()).bodyAsText() shouldBe "delegated"
+    }
+
+    @Test
+    fun `chain behaviours`() = runTest {
+        engine.misbehave(
+            ReturnStatus(InternalServerError).applied(1.times())
+                .then(ReturnStatus(BadGateway).applied(1.times()))
+                .then(ReturnStatus(ServiceUnavailable).applied(1.times()))
+                .then(ReturnStatus(GatewayTimeout))
+        )
+
+        client.get(anyRequest()).status shouldBe InternalServerError
+        client.get(anyRequest()).status shouldBe BadGateway
+        client.get(anyRequest()).status shouldBe ServiceUnavailable
+        client.get(anyRequest()).status shouldBe GatewayTimeout
     }
 }
 
