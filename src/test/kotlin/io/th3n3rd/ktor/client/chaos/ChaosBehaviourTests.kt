@@ -8,6 +8,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.NoOp
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StripBody
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -33,6 +34,15 @@ class ChaosBehaviourTests {
         val response = client.request(anyRequest())
 
         response.status shouldBe BadRequest
+    }
+
+    @Test
+    fun `strips body off of the response`() = runTest {
+        engine.misbehave(StripBody())
+
+        val response = client.request(anyRequest())
+
+        response.bodyAsText() shouldBe ""
     }
 }
 
