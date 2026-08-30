@@ -1,18 +1,22 @@
 package io.th3n3rd.ktor.client.chaos
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.Latency
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.NoOp
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StripBody
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ThrowException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.time.Duration
+import kotlin.time.measureTimedValue
 
 class ChaosBehaviourTests {
 
@@ -54,6 +58,16 @@ class ChaosBehaviourTests {
         val exception = shouldThrow<RuntimeException> { client.request(anyRequest()) }
 
         exception.message shouldBe "something went wrong!"
+    }
+
+    @Test
+    fun `introduces latency`() = runTest {
+        engine.misbehave(Latency(Duration.ofMillis(500)))
+
+        val (response, duration) = measureTimedValue { client.request(anyRequest()) }
+
+        response.bodyAsText() shouldBe "delegated"
+        duration.inWholeMilliseconds shouldBeGreaterThanOrEqual 500
     }
 }
 

@@ -5,6 +5,8 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.time.delay
+import java.time.Duration
 
 fun interface ChaosBehaviour {
     suspend operator fun invoke(
@@ -42,6 +44,13 @@ object ChaosBehaviours {
     object ThrowException {
         operator fun invoke(e: Throwable = RuntimeException("something went wrong!")) = ChaosBehaviour { _, _ ->
             throw e
+        }
+    }
+
+    object Latency {
+        operator fun invoke(duration: Duration) = ChaosBehaviour { request, next ->
+            delay(duration)
+            next(request)
         }
     }
 }
