@@ -12,8 +12,14 @@ import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.Latency
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StripBody
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.SuspendForever
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ThrowException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.time.withTimeoutOrNull
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.time.measureTimedValue
@@ -68,6 +74,24 @@ class ChaosBehaviourTests {
 
         response.bodyAsText() shouldBe "delegated"
         duration.inWholeMilliseconds shouldBeGreaterThanOrEqual 500
+    }
+
+    @Test
+    fun `suspends forever`() = runTest {
+        engine.misbehave(SuspendForever())
+
+        val deferred = async {
+            client.request(anyRequest())
+        }
+
+        val response = withContext(Dispatchers.Default) { // else we will use the context from the runTest scheduler
+            withTimeoutOrNull(Duration.ofMillis(100)) {
+                deferred.await()
+            }
+        }
+
+        response shouldBe null
+        deferred.cancelAndJoin()
     }
 }
 

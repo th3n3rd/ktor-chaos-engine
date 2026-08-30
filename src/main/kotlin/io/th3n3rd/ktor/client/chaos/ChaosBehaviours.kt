@@ -5,6 +5,7 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.time.delay
 import java.time.Duration
 
@@ -49,6 +50,12 @@ object ChaosBehaviours {
         operator fun invoke(duration: Duration) = ChaosBehaviour { request, next ->
             delay(duration)
             next(request)
+        }
+    }
+
+    object SuspendForever {
+        operator fun invoke() = ChaosBehaviour { _, _ ->
+            awaitCancellation()
         }
     }
 }
