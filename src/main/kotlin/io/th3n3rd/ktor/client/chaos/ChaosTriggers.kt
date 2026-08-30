@@ -7,11 +7,6 @@ fun interface ChaosTrigger {
 }
 
 object ChaosTriggers {
-    object Always {
-        operator fun invoke() = ChaosTrigger { true }
-    }
-
-    object Never {
-        operator fun invoke() = ChaosTrigger { false }
-    }
+    val Always = ChaosTrigger { true }
+    val Never = ChaosTrigger { false }
 }

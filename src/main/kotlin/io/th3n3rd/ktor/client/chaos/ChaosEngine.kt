@@ -20,7 +20,7 @@ class ChaosEngine(
         }
     }
 
-    fun misbehave(behaviour: ChaosBehaviour) = misbehave(behaviour.applied(Always()))
+    fun misbehave(behaviour: ChaosBehaviour) = misbehave(behaviour.applied(Always))
 
     fun misbehave(stage: ChaosStage) {
         this.stage = stage
@@ -31,6 +31,6 @@ class ChaosEngine(
     }
 
     companion object {
-        val defaultBehaviour = NoOp().applied(Always())
+        val defaultBehaviour = NoOp().applied(Always)
     }
 }

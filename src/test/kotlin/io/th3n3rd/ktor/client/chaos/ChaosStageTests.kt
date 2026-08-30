@@ -22,7 +22,7 @@ class ChaosStageTests {
     fun `applies the given behaviour until trigger fires`() = runTest {
         engine.misbehave(
             ReturnStatus(ServiceUnavailable)
-                .applied(Always())
+                .applied(Always)
                 .until { request -> request.method == Post }
         )
 

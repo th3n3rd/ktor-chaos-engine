@@ -9,17 +9,13 @@ class ChaosTriggerTests {
 
     @Test
     fun `always triggers`() {
-        val trigger = Always()
-
-        trigger(anyRequest().build()) shouldBe true
-        trigger(anyRequest().build()) shouldBe true
+        Always(anyRequest().build()) shouldBe true
+        Always(anyRequest().build()) shouldBe true
     }
 
     @Test
     fun `never triggers`() {
-        val trigger = Never()
-
-        trigger(anyRequest().build()) shouldBe false
-        trigger(anyRequest().build()) shouldBe false
+        Never(anyRequest().build()) shouldBe false
+        Never(anyRequest().build()) shouldBe false
     }
 }
