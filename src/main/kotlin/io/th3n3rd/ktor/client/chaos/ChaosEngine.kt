@@ -3,7 +3,7 @@ package io.th3n3rd.ktor.client.chaos
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.utils.io.*
-import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.NoOp
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 
 class ChaosEngine(
@@ -31,6 +31,6 @@ class ChaosEngine(
     }
 
     companion object {
-        val defaultBehaviour = NoOp().applied(Always)
+        val defaultBehaviour = None.applied(Always)
     }
 }

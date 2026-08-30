@@ -16,9 +16,7 @@ fun interface ChaosBehaviour {
 }
 
 object ChaosBehaviours {
-    object NoOp {
-        operator fun invoke() = ChaosBehaviour { request, next -> next(request) }
-    }
+    val None = ChaosBehaviour { request, next -> next(request) }
 
     @OptIn(InternalAPI::class)
     object ReturnStatus {

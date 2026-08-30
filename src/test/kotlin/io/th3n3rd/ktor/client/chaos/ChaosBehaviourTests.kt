@@ -9,7 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.Latency
-import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.NoOp
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StripBody
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ThrowException
@@ -26,7 +26,7 @@ class ChaosBehaviourTests {
 
     @Test
     fun `no behaviour applied`() = runTest {
-        engine.misbehave(NoOp())
+        engine.misbehave(None)
 
         val response = client.request(anyRequest())
 
