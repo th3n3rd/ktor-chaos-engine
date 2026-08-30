@@ -67,4 +67,18 @@ object ChaosBehaviours {
             awaitCancellation()
         }
     }
+
+    object StreamBodyForever {
+        operator fun invoke() = ChaosBehaviour { request, next ->
+            val response = next(request)
+            HttpResponseData(
+                statusCode = response.statusCode,
+                requestTime = response.requestTime,
+                headers = response.headers,
+                version = response.version,
+                body = ByteChannel(),
+                callContext = response.callContext,
+            )
+        }
+    }
 }

@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.Latency
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StreamBodyForever
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.StripBody
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.SuspendForever
 import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ThrowException
@@ -91,6 +92,24 @@ class ChaosBehaviourTests {
         }
 
         response shouldBe null
+        deferred.cancelAndJoin()
+    }
+
+    @Test
+    fun `stream body forever`() = runTest {
+        engine.misbehave(StreamBodyForever())
+
+        val deferred = async {
+            client.request(anyRequest()).bodyAsText()
+        }
+
+        val body = withContext(Dispatchers.Default) { // else we will use the context from the runTest scheduler
+            withTimeoutOrNull(Duration.ofMillis(100)) {
+                deferred.await()
+            }
+        }
+
+        body shouldBe null
         deferred.cancelAndJoin()
     }
 }
