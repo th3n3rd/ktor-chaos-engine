@@ -5,7 +5,7 @@ import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import java.util.concurrent.atomic.AtomicBoolean
 
-fun ChaosStage.until(trigger: ChaosTrigger) = object : ChaosStage {
+infix fun ChaosStage.until(trigger: ChaosTrigger) = object : ChaosStage {
     private val active = AtomicBoolean(true)
 
     override fun invoke(request: HttpRequestData): ChaosBehaviour {
@@ -19,7 +19,7 @@ fun ChaosStage.then(next: ChaosStage) = ChaosStage { request ->
     if (behaviour == None) next(request) else behaviour
 }
 
-fun ChaosStage.then(next: ChaosBehaviour) = then(next.applied(Always))
+fun ChaosStage.then(next: ChaosBehaviour) = then(next applied Always)
 
 fun interface ChaosStage {
     operator fun invoke(request: HttpRequestData): ChaosBehaviour

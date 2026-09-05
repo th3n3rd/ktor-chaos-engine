@@ -13,21 +13,16 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.time.delay
 import java.time.Duration
 
-fun ChaosBehaviour.applied(trigger: ChaosTrigger) = ChaosStage { request ->
+infix fun ChaosBehaviour.applied(trigger: ChaosTrigger) = ChaosStage { request ->
     if (trigger(request)) this else None
 }
 
 /**
  * Alias for [ChaosBehaviour.applied]
  */
-fun ChaosBehaviour.whenever(trigger: ChaosTrigger) = applied(trigger)
+infix fun ChaosBehaviour.whenever(trigger: ChaosTrigger) = this applied trigger
 
-/**
- * Alias for [ChaosBehaviour.applied]
- */
-fun ChaosBehaviour.on(trigger: ChaosTrigger) = applied(trigger)
-
-fun ChaosBehaviour.until(trigger: ChaosTrigger) = applied(Always).until(trigger)
+infix fun ChaosBehaviour.until(trigger: ChaosTrigger) = this applied Always until trigger
 
 fun interface ChaosBehaviour {
     suspend operator fun invoke(

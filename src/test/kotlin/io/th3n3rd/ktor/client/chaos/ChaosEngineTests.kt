@@ -45,9 +45,9 @@ class ChaosEngineTests {
     @Test
     fun `applies complex behaviour`() = runTest {
         engine.misbehave(
-            returnText("first").until(3.requests)
-                .then(returnText("second").whenever { it.method == Put }.until(1.requests))
-                .then(returnText("third").on(100.percent).until { it.method == Get })
+            (returnText("first") until 3.requests)
+                .then(returnText("second") whenever { it.method == Put } until 1.requests)
+                .then(returnText("third") applied 100.percent until { it.method == Get })
         )
 
         repeat(3) { client.get(anyRequest()).bodyAsText() shouldBe "first" }

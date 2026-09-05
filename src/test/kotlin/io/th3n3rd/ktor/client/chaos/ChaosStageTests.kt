@@ -25,8 +25,8 @@ class ChaosStageTests {
     fun `applies the given behaviour until trigger fires`() = runTest {
         engine.misbehave(
             ReturnStatus(ServiceUnavailable)
-                .applied(Always)
-                .until { request -> request.method == Post }
+                applied Always
+                until { request -> request.method == Post }
         )
 
         client.get(anyRequest()).status shouldBe ServiceUnavailable
@@ -37,9 +37,9 @@ class ChaosStageTests {
     @Test
     fun `chain behaviours`() = runTest {
         engine.misbehave(
-            ReturnStatus(InternalServerError).until(1.requests)
-                .then(ReturnStatus(BadGateway).until(1.requests))
-                .then(ReturnStatus(ServiceUnavailable).until(1.requests))
+            (ReturnStatus(InternalServerError) until 1.requests)
+                .then(ReturnStatus(BadGateway) until 1.requests)
+                .then(ReturnStatus(ServiceUnavailable) until 1.requests)
                 .then(ReturnStatus(GatewayTimeout))
         )
 
