@@ -37,9 +37,9 @@ class ChaosStageTests {
     @Test
     fun `chain behaviours`() = runTest {
         engine.misbehave(
-            ReturnStatus(InternalServerError).applied(1.times())
-                .then(ReturnStatus(BadGateway).applied(1.times()))
-                .then(ReturnStatus(ServiceUnavailable).applied(1.times()))
+            ReturnStatus(InternalServerError).until(1.requests)
+                .then(ReturnStatus(BadGateway).until(1.requests))
+                .then(ReturnStatus(ServiceUnavailable).until(1.requests))
                 .then(ReturnStatus(GatewayTimeout))
         )
 

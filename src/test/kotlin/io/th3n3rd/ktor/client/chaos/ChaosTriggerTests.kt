@@ -22,16 +22,16 @@ class ChaosTriggerTests {
     }
 
     @Test
-    fun `triggers exactly n times`() {
-        with(1.times()) {
-            this(anyRequest().build()) shouldBe true
+    fun `triggers after n requests`() {
+        with(1.requests) {
             this(anyRequest().build()) shouldBe false
+            this(anyRequest().build()) shouldBe true
         }
 
-        with(2.times()) {
-            this(anyRequest().build()) shouldBe true
-            this(anyRequest().build()) shouldBe true
+        with(2.requests) {
             this(anyRequest().build()) shouldBe false
+            this(anyRequest().build()) shouldBe false
+            this(anyRequest().build()) shouldBe true
         }
     }
 

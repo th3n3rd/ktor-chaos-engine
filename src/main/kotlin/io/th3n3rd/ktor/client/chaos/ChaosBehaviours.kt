@@ -7,9 +7,27 @@ import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
+import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
+import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.time.delay
 import java.time.Duration
+
+fun ChaosBehaviour.applied(trigger: ChaosTrigger) = ChaosStage { request ->
+    if (trigger(request)) this else None
+}
+
+/**
+ * Alias for [ChaosBehaviour.applied]
+ */
+fun ChaosBehaviour.whenever(trigger: ChaosTrigger) = applied(trigger)
+
+/**
+ * Alias for [ChaosBehaviour.applied]
+ */
+fun ChaosBehaviour.on(trigger: ChaosTrigger) = applied(trigger)
+
+fun ChaosBehaviour.until(trigger: ChaosTrigger) = applied(Always).until(trigger)
 
 fun interface ChaosBehaviour {
     suspend operator fun invoke(

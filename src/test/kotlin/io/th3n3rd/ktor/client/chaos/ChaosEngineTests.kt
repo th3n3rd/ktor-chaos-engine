@@ -5,6 +5,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.HttpMethod.Companion.Get
+import io.ktor.http.HttpMethod.Companion.Put
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -23,7 +25,7 @@ class ChaosEngineTests {
 
     @Test
     fun `applies given behaviour when misbehaves`() = runTest {
-        engine.misbehave { _, _ -> respondOk("misbehaved") }
+        engine.misbehave(returnText("misbehaved"))
 
         val result = client.request(anyRequest())
 
@@ -32,12 +34,28 @@ class ChaosEngineTests {
 
     @Test
     fun `restore behaviour after misbehaving`() = runTest {
-        engine.misbehave { _, _ -> respondOk("misbehaved") }
+        engine.misbehave(returnText("misbehaved"))
         engine.behave()
 
         val result = client.request(anyRequest())
 
         result.bodyAsText() shouldBe "delegated"
     }
+
+    @Test
+    fun `applies complex behaviour`() = runTest {
+        engine.misbehave(
+            returnText("first").until(3.requests)
+                .then(returnText("second").whenever { it.method == Put }.until(1.requests))
+                .then(returnText("third").on(100.percent).until { it.method == Get })
+        )
+
+        repeat(3) { client.get(anyRequest()).bodyAsText() shouldBe "first" }
+        client.put(anyRequest()).bodyAsText() shouldBe "second"
+        repeat(1000) { client.post(anyRequest()).bodyAsText() shouldBe "third" }
+        client.get(anyRequest()).bodyAsText() shouldBe "delegated"
+    }
+
+    private fun returnText(text: String): ChaosBehaviour = { _, _ -> respondOk(text) }
 }
 

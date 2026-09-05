@@ -5,10 +5,6 @@ import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import java.util.concurrent.atomic.AtomicBoolean
 
-fun ChaosBehaviour.applied(trigger: ChaosTrigger) = ChaosStage { request ->
-    if (trigger(request)) this else None
-}
-
 fun ChaosStage.until(trigger: ChaosTrigger) = object : ChaosStage {
     private val active = AtomicBoolean(true)
 
