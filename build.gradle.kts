@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.4.10"
-    id("com.vanniktech.maven.publish") version "0.37.0"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.vanniktech.maven.publish)
 }
 
 group = "io.github.th3n3rd"
@@ -11,11 +11,11 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-core:3.1.1")
-    implementation("io.ktor:ktor-client-mock:3.1.1")
-    testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-assertions-core:6.2.4")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.mock)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 kotlin {
