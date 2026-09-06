@@ -2,6 +2,8 @@ package io.th3n3rd.ktor.client.chaos
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpMethod.Companion.Get
+import io.ktor.http.HttpMethod.Companion.Put
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Never
 import org.junit.jupiter.api.Test
@@ -26,12 +28,32 @@ class ChaosTriggerTests {
         with(1.requests) {
             this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe true
+            this(anyRequest().build()) shouldBe true
         }
 
         with(2.requests) {
             this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe true
+            this(anyRequest().build()) shouldBe true
+        }
+    }
+
+    @Test
+    fun `triggers after n matching requests`() {
+        with(1.matches { it.method == Put }) {
+            this(anyRequest().apply { method = Get }.build()) shouldBe false
+            this(anyRequest().apply { method = Put }.build()) shouldBe false
+            this(anyRequest().apply { method = Put }.build()) shouldBe true
+            this(anyRequest().apply { method = Put }.build()) shouldBe true
+        }
+
+        with(2.matches { it.method == Put }) {
+            this(anyRequest().apply { method = Get }.build()) shouldBe false
+            this(anyRequest().apply { method = Put }.build()) shouldBe false
+            this(anyRequest().apply { method = Put }.build()) shouldBe false
+            this(anyRequest().apply { method = Put }.build()) shouldBe true
+            this(anyRequest().apply { method = Put }.build()) shouldBe true
         }
     }
 
