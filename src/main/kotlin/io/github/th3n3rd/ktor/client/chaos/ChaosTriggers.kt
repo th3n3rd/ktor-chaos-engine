@@ -1,8 +1,8 @@
-package io.th3n3rd.ktor.client.chaos
+package io.github.th3n3rd.ktor.client.chaos
 
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Percentage
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.RequestMatchingCount
 import io.ktor.client.request.*
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Percentage
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.RequestMatchingCount
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 

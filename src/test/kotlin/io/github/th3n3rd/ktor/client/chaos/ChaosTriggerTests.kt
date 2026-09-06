@@ -1,11 +1,11 @@
-package io.th3n3rd.ktor.client.chaos
+package io.github.th3n3rd.ktor.client.chaos
 
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Never
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.http.HttpMethod.Companion.Put
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Never
 import org.junit.jupiter.api.Test
 import java.util.*
 

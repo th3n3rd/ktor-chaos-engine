@@ -1,5 +1,7 @@
-package io.th3n3rd.ktor.client.chaos
+package io.github.th3n3rd.ktor.client.chaos
 
+import io.github.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -7,8 +9,6 @@ import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
-import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.time.delay
 import java.time.Duration

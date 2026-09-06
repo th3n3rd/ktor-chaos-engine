@@ -1,4 +1,4 @@
-package io.th3n3rd.ktor.client.chaos
+package io.github.th3n3rd.ktor.client.chaos
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.*

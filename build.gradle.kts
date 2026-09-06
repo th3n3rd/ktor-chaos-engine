@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.4.10"
 }
 
-group = "io.th3n3rd"
+group = "io.github.th3n3rd"
 version = "1.0-SNAPSHOT"
 
 repositories {

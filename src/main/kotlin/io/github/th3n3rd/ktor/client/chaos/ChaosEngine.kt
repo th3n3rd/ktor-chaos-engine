@@ -1,10 +1,10 @@
-package io.th3n3rd.ktor.client.chaos
+package io.github.th3n3rd.ktor.client.chaos
 
+import io.github.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
+import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.utils.io.*
-import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 
 class ChaosEngine(
     private val delegate: HttpClientEngine,
