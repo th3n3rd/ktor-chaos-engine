@@ -9,7 +9,7 @@ infix fun ChaosStage.until(trigger: ChaosTrigger) = object : ChaosStage {
     private val active = AtomicBoolean(true)
 
     override fun invoke(request: HttpRequestData): ChaosBehaviour {
-        if (active.get()) active.set(!trigger(request))
+        active.compareAndSet(true, !trigger(request))
         return if (active.get()) this@until(request) else None
     }
 }
