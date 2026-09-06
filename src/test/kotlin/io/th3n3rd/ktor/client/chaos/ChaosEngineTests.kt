@@ -46,7 +46,7 @@ class ChaosEngineTests {
     fun `applies complex behaviour`() = runTest {
         engine.misbehave(
             (returnText("first") until 3.requests)
-                .then(returnText("second") until 1.matches { it.method == Put })
+                .then(returnText("second") until 1.match { it.method == Put })
                 .then(returnText("third") applied 100.percent until { it.method == Get })
         )
 

@@ -41,14 +41,14 @@ class ChaosTriggerTests {
 
     @Test
     fun `triggers after n matching requests`() {
-        with(1.matches { it.method == Put }) {
+        with(1.match { it.method == Put }) {
             this(anyRequest().apply { method = Get }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe true
             this(anyRequest().apply { method = Put }.build()) shouldBe true
         }
 
-        with(2.matches { it.method == Put }) {
+        with(2.match { it.method == Put }) {
             this(anyRequest().apply { method = Get }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe false

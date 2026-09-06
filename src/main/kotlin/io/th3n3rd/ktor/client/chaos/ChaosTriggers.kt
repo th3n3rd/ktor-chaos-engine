@@ -38,8 +38,8 @@ object ChaosTriggers {
     }
 }
 
-inline val Int.requests get() = matches { true }
-fun Int.matches(predicate: (HttpRequestData) -> Boolean) = RequestMatchingCount(this, predicate)
+inline val Int.requests get() = match { true }
+fun Int.match(predicate: (HttpRequestData) -> Boolean) = RequestMatchingCount(this, predicate)
 
 inline val Int.percent get() = Percentage(this)
 fun Int.percent(random: Random = Random()) = Percentage(this@percent, random)
