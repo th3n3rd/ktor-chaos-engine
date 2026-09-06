@@ -1,9 +1,10 @@
 plugins {
     kotlin("jvm") version "2.4.10"
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 group = "io.github.th3n3rd"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -23,4 +24,8 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+mavenPublishing {
+    signAllPublications()
 }
