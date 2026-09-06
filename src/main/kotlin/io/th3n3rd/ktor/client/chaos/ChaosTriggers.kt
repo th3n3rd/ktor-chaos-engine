@@ -2,7 +2,6 @@ package io.th3n3rd.ktor.client.chaos
 
 import io.ktor.client.request.*
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Percentage
-import io.th3n3rd.ktor.client.chaos.ChaosTriggers.RequestCount
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.RequestMatchingCount
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -14,13 +13,6 @@ fun interface ChaosTrigger {
 object ChaosTriggers {
     val Always = ChaosTrigger { true }
     val Never = ChaosTrigger { false }
-
-    object RequestCount {
-        operator fun invoke(n: Int): ChaosTrigger {
-            val counter = AtomicInteger(0)
-            return ChaosTrigger { counter.getAndIncrement() >= n }
-        }
-    }
 
     object RequestMatchingCount {
         operator fun invoke(n: Int, matches: (HttpRequestData) -> Boolean): ChaosTrigger {
@@ -46,7 +38,8 @@ object ChaosTriggers {
     }
 }
 
-inline val Int.requests get() = RequestCount(this)
+inline val Int.requests get() = matches { true }
+fun Int.matches(predicate: (HttpRequestData) -> Boolean) = RequestMatchingCount(this, predicate)
+
 inline val Int.percent get() = Percentage(this)
 fun Int.percent(random: Random = Random()) = Percentage(this@percent, random)
-fun Int.matches(predicate: (HttpRequestData) -> Boolean) = RequestMatchingCount(this, predicate)
