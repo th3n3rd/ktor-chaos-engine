@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.ktor.client.core)
+    api(libs.ktor.client.core)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotest.assertions.core)
