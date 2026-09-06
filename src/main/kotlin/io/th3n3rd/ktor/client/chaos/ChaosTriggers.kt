@@ -18,14 +18,7 @@ object ChaosTriggers {
         operator fun invoke(n: Int, matches: (HttpRequestData) -> Boolean): ChaosTrigger {
             val counter = AtomicInteger(0)
             return ChaosTrigger {
-                when {
-                    counter.get() >= n -> true
-                    matches(it) -> {
-                        counter.incrementAndGet()
-                        false
-                    }
-                    else -> false
-                }
+                matches(it) && counter.incrementAndGet() >= n
             }
         }
     }

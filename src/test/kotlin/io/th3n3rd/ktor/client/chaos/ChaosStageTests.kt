@@ -6,11 +6,6 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.HttpMethod.Companion.Post
-import io.ktor.http.HttpStatusCode.Companion.BadGateway
-import io.ktor.http.HttpStatusCode.Companion.GatewayTimeout
-import io.ktor.http.HttpStatusCode.Companion.InternalServerError
-import io.ktor.http.HttpStatusCode.Companion.ServiceUnavailable
-import io.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
 import io.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -24,12 +19,25 @@ class ChaosStageTests {
     @Test
     fun `applies the given behaviour until trigger fires`() = runTest {
         engine.misbehave(
-            ReturnStatus(ServiceUnavailable)
+            returnText("misbehaved")
                 applied Always
-                until { request -> request.method == Post }
+                until { it.method == Post }
         )
 
-        client.get(anyRequest()).status shouldBe ServiceUnavailable
+        client.get(anyRequest()).bodyAsText() shouldBe "misbehaved"
+        client.post(anyRequest()).bodyAsText() shouldBe "delegated"
+        client.get(anyRequest()).bodyAsText() shouldBe "delegated"
+    }
+
+    @Test
+    fun `applies the given behaviour until after trigger fires`() = runTest {
+        engine.misbehave(
+            returnText("misbehaved")
+                applied Always
+                untilAfter { it.method == Post }
+        )
+        client.get(anyRequest()).bodyAsText() shouldBe "misbehaved"
+        client.post(anyRequest()).bodyAsText() shouldBe "misbehaved"
         client.post(anyRequest()).bodyAsText() shouldBe "delegated"
         client.get(anyRequest()).bodyAsText() shouldBe "delegated"
     }
@@ -37,16 +45,16 @@ class ChaosStageTests {
     @Test
     fun `chain behaviours`() = runTest {
         engine.misbehave(
-            (ReturnStatus(InternalServerError) until 1.requests)
-                .then(ReturnStatus(BadGateway) until 1.requests)
-                .then(ReturnStatus(ServiceUnavailable) until 1.requests)
-                .then(ReturnStatus(GatewayTimeout))
+            (returnText("first") untilAfter 1.requests)
+                .then(returnText("second") untilAfter 1.requests)
+                .then(returnText("third") untilAfter 1.requests)
+                .then(returnText("fourth"))
         )
 
-        client.get(anyRequest()).status shouldBe InternalServerError
-        client.get(anyRequest()).status shouldBe BadGateway
-        client.get(anyRequest()).status shouldBe ServiceUnavailable
-        client.get(anyRequest()).status shouldBe GatewayTimeout
+        client.get(anyRequest()).bodyAsText() shouldBe "first"
+        client.get(anyRequest()).bodyAsText() shouldBe "second"
+        client.get(anyRequest()).bodyAsText() shouldBe "third"
+        client.get(anyRequest()).bodyAsText() shouldBe "fourth"
     }
 }
 

@@ -14,6 +14,20 @@ infix fun ChaosStage.until(trigger: ChaosTrigger) = object : ChaosStage {
     }
 }
 
+infix fun ChaosStage.untilAfter(trigger: ChaosTrigger) = object : ChaosStage {
+    private val active = AtomicBoolean(true)
+
+    override fun invoke(request: HttpRequestData): ChaosBehaviour {
+        if (!active.get()) {
+            return None
+        }
+        if (trigger(request)) {
+            active.set(false)
+        }
+        return this@untilAfter(request)
+    }
+}
+
 fun ChaosStage.then(next: ChaosStage) = ChaosStage { request ->
     val behaviour = this(request)
     if (behaviour == None) next(request) else behaviour

@@ -5,6 +5,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.HttpMethod.Companion.Delete
 import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.http.HttpMethod.Companion.Put
 import kotlinx.coroutines.test.runTest
@@ -45,18 +46,18 @@ class ChaosEngineTests {
     @Test
     fun `applies complex behaviour`() = runTest {
         engine.misbehave(
-            (returnText("first") until 3.requests)
-                .then(returnText("second") until 1.match { it.method == Put })
+            (returnText("first") untilAfter 3.requests)
+                .then(returnText("second") untilAfter 1.match { it.method == Put })
                 .then(returnText("third") applied 100.percent until { it.method == Get })
+                .then(returnText("fourth") until { it.method == Delete })
         )
 
         repeat(3) { client.get(anyRequest()).bodyAsText() shouldBe "first" }
         client.post(anyRequest()).bodyAsText() shouldBe "second"
         client.put(anyRequest()).bodyAsText() shouldBe "second"
         repeat(1000) { client.post(anyRequest()).bodyAsText() shouldBe "third" }
-        client.get(anyRequest()).bodyAsText() shouldBe "delegated"
+        client.get(anyRequest()).bodyAsText() shouldBe "fourth"
+        client.delete(anyRequest()).bodyAsText() shouldBe "delegated"
     }
-
-    private fun returnText(text: String): ChaosBehaviour = { _, _ -> respondOk(text) }
 }
 

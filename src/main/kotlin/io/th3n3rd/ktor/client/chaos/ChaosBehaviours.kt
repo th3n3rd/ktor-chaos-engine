@@ -17,12 +17,9 @@ infix fun ChaosBehaviour.applied(trigger: ChaosTrigger) = ChaosStage { request -
     if (trigger(request)) this else None
 }
 
-/**
- * Alias for [ChaosBehaviour.applied]
- */
-infix fun ChaosBehaviour.whenever(trigger: ChaosTrigger) = this applied trigger
-
 infix fun ChaosBehaviour.until(trigger: ChaosTrigger) = this applied Always until trigger
+
+infix fun ChaosBehaviour.untilAfter(trigger: ChaosTrigger) = this applied Always untilAfter trigger
 
 fun interface ChaosBehaviour {
     suspend operator fun invoke(

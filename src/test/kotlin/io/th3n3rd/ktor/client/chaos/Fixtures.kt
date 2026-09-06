@@ -16,6 +16,8 @@ fun anyRequest(): HttpRequestBuilder {
     return builder
 }
 
+fun returnText(text: String): ChaosBehaviour = { _, _ -> respondOk(text) }
+
 @OptIn(InternalAPI::class)
 suspend fun respondOk(content: String = ""): HttpResponseData =
     HttpResponseData(

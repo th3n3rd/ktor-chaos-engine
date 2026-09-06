@@ -24,15 +24,13 @@ class ChaosTriggerTests {
     }
 
     @Test
-    fun `triggers after n requests`() {
+    fun `triggers at n requests`() {
         with(1.requests) {
-            this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe true
             this(anyRequest().build()) shouldBe true
         }
 
         with(2.requests) {
-            this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe false
             this(anyRequest().build()) shouldBe true
             this(anyRequest().build()) shouldBe true
@@ -40,17 +38,15 @@ class ChaosTriggerTests {
     }
 
     @Test
-    fun `triggers after n matching requests`() {
+    fun `triggers at n matching requests`() {
         with(1.match { it.method == Put }) {
             this(anyRequest().apply { method = Get }.build()) shouldBe false
-            this(anyRequest().apply { method = Put }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe true
             this(anyRequest().apply { method = Put }.build()) shouldBe true
         }
 
         with(2.match { it.method == Put }) {
             this(anyRequest().apply { method = Get }.build()) shouldBe false
-            this(anyRequest().apply { method = Put }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe false
             this(anyRequest().apply { method = Put }.build()) shouldBe true
             this(anyRequest().apply { method = Put }.build()) shouldBe true
