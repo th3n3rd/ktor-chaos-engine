@@ -19,6 +19,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.time.measureTimedValue
@@ -119,22 +120,29 @@ abstract class ChaosBehaviourContract {
     }
 }
 
-class MockEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate() = MockEngine { respondOk("delegated") }
-}
+class ChaosBehaviourTests {
+    @Nested
+    inner class MockEngine : ChaosBehaviourContract() {
+        override fun delegate() = MockEngine { respondOk("delegated") }
+    }
 
-class CioEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate() = CIO.create()
-}
+    @Nested
+    inner class CioEngine : ChaosBehaviourContract() {
+        override fun delegate() = CIO.create()
+    }
 
-class OkHttpEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate() = OkHttp.create()
-}
+    @Nested
+    inner class OkHttpEngine : ChaosBehaviourContract() {
+        override fun delegate() = OkHttp.create()
+    }
 
-class ApacheEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate() = Apache.create()
-}
+    @Nested
+    inner class ApacheEngine : ChaosBehaviourContract() {
+        override fun delegate() = Apache.create()
+    }
 
-class JavaEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate() = Java.create()
+    @Nested
+    inner class JavaEngine : ChaosBehaviourContract() {
+        override fun delegate() = Java.create()
+    }
 }
