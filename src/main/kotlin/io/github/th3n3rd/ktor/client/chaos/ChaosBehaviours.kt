@@ -4,6 +4,7 @@ import io.github.th3n3rd.ktor.client.chaos.ChaosBehaviours.None
 import io.github.th3n3rd.ktor.client.chaos.ChaosTriggers.Always
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
+import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -57,7 +58,11 @@ object ChaosBehaviours {
             HttpResponseData(
                 statusCode = response.statusCode,
                 requestTime = response.requestTime,
-                headers = response.headers,
+                headers = buildHeaders {
+                    appendAll(response.headers)
+                    remove(HttpHeaders.ContentLength)
+                    append(HttpHeaders.ContentLength, "0")
+                },
                 version = response.version,
                 body = ByteReadChannel.Empty,
                 callContext = response.callContext
