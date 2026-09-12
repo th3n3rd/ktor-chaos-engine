@@ -243,6 +243,12 @@ class ResilienceServiceTests {
 
 ---
 
+## 🙏 Acknowledgements & Credits
+
+This library is heavily inspired by the excellent [http4k Chaos](https://www.http4k.org/ecosystem/http4k/reference/chaos/) module and its elegant approach to chaos engineering in Kotlin.
+
+---
+
 ## 📄 License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
