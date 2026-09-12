@@ -27,5 +27,31 @@ tasks.test {
 }
 
 mavenPublishing {
+    publishToMavenCentral()
     signAllPublications()
+
+    pom {
+        name = "Ktor Chaos Engine"
+        description = "Chaos testing engine for Ktor HTTP clients."
+        url = "https://github.com/th3n3rd/ktor-chaos-engine"
+
+        licenses {
+            license {
+                name = "Apache-2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+
+        developers {
+            developer {
+                id = "th3n3rd"
+                name = "Marco Garofalo"
+            }
+        }
+
+        scm {
+            url = "https://github.com/th3n3rd/ktor-chaos-engine"
+            connection = "scm:git:https://github.com/th3n3rd/ktor-chaos-engine.git"
+        }
+    }
 }
