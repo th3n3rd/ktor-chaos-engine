@@ -16,6 +16,7 @@ dependencies {
     testImplementation(libs.ktor.client.cio)
     testImplementation(libs.ktor.client.okhttp)
     testImplementation(libs.ktor.client.apache)
+    testImplementation(libs.ktor.client.java)
     testImplementation(libs.ktor.server.core)
     testImplementation(libs.ktor.server.cio)
     testImplementation(libs.kotlin.test)

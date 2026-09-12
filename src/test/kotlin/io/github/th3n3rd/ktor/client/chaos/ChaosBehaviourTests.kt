@@ -7,6 +7,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.java.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -132,4 +133,8 @@ class OkHttpEngineChaosBehaviourTests : ChaosBehaviourContract() {
 
 class ApacheEngineChaosBehaviourTests : ChaosBehaviourContract() {
     override fun delegate() = Apache.create()
+}
+
+class JavaEngineChaosBehaviourTests : ChaosBehaviourContract() {
+    override fun delegate() = Java.create()
 }
