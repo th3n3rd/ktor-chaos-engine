@@ -3,6 +3,7 @@ kotest = "6.2.4"
 kotlin = "2.4.10"
 kotlinx-coroutines = "1.10.1"
 ktor = "3.1.1"
+slf4j = "2.0.17"
 vanniktech-maven-publish = "0.37.0"
 
 [libraries]
@@ -11,6 +12,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

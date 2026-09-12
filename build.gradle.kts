@@ -16,6 +16,7 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.slf4j.nop)
 }
 
 kotlin {
