@@ -5,6 +5,7 @@ import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.ktor.client.*
 import io.ktor.client.engine.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.engine.okhttp.*
@@ -118,13 +119,17 @@ abstract class ChaosBehaviourContract {
 }
 
 class MockEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate(): HttpClientEngine = MockEngine { respondOk("delegated") }
+    override fun delegate() = MockEngine { respondOk("delegated") }
 }
 
 class CioEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate(): HttpClientEngine = CIO.create()
+    override fun delegate() = CIO.create()
 }
 
 class OkHttpEngineChaosBehaviourTests : ChaosBehaviourContract() {
-    override fun delegate(): HttpClientEngine = OkHttp.create()
+    override fun delegate() = OkHttp.create()
+}
+
+class ApacheEngineChaosBehaviourTests : ChaosBehaviourContract() {
+    override fun delegate() = Apache.create()
 }
