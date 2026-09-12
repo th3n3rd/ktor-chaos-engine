@@ -14,6 +14,7 @@ dependencies {
     api(libs.ktor.client.core)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.ktor.client.cio)
+    testImplementation(libs.ktor.client.okhttp)
     testImplementation(libs.ktor.server.core)
     testImplementation(libs.ktor.server.cio)
     testImplementation(libs.kotlin.test)
