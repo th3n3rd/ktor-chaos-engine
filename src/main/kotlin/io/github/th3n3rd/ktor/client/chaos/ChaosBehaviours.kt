@@ -29,7 +29,13 @@ fun interface ChaosBehaviour {
 }
 
 object ChaosBehaviours {
-    val None = ChaosBehaviour { request, next -> next(request) }
+
+    object None : ChaosBehaviour {
+        override suspend fun invoke(
+            request: HttpRequestData,
+            next: suspend (HttpRequestData) -> HttpResponseData
+        ) = next(request)
+    }
 
     @OptIn(InternalAPI::class)
     object ReturnStatus {
