@@ -11,8 +11,14 @@ fun interface ChaosTrigger {
 }
 
 object ChaosTriggers {
-    val Always = ChaosTrigger { true }
-    val Never = ChaosTrigger { false }
+
+    object Always : ChaosTrigger {
+        override fun invoke(request: HttpRequestData) = true
+    }
+
+    object Never : ChaosTrigger {
+        override fun invoke(request: HttpRequestData) = false
+    }
 
     object RequestMatchingCount {
         operator fun invoke(n: Int, matches: (HttpRequestData) -> Boolean): ChaosTrigger {
