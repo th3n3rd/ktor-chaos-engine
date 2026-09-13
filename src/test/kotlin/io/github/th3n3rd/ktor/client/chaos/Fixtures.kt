@@ -34,6 +34,21 @@ suspend fun respondOk(content: String = ""): HttpResponseData =
         callContext()
     )
 
+@OptIn(InternalAPI::class)
+suspend fun respond(
+    statusCode: HttpStatusCode,
+    headers: Headers,
+    content: String,
+): HttpResponseData =
+    HttpResponseData(
+        statusCode = statusCode,
+        requestTime = GMTDate(),
+        headers = headers,
+        version = HttpProtocolVersion.HTTP_1_1,
+        body = ByteReadChannel(content.toByteArray(Charsets.UTF_8)),
+        callContext = callContext()
+    )
+
 class UpstreamServer(val staticContent: String) {
     private val server = embeddedServer(CIO, port = 0) {
         routing {

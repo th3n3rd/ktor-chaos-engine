@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     api(libs.ktor.client.core)
-    testImplementation(libs.ktor.client.mock)
+    api(libs.ktor.client.mock)
     testImplementation(libs.ktor.client.cio)
     testImplementation(libs.ktor.client.okhttp)
     testImplementation(libs.ktor.client.apache)
