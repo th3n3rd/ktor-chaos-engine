@@ -21,6 +21,8 @@ import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.Duration
 import kotlin.time.measureTimedValue
 
@@ -120,6 +122,7 @@ abstract class ChaosBehaviourContract {
     }
 }
 
+@Execution(ExecutionMode.CONCURRENT)
 class ChaosBehaviourTests {
     @Nested
     inner class MockEngine : ChaosBehaviourContract() {
