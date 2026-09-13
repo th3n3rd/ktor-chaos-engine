@@ -268,6 +268,20 @@ import io.ktor.client.engine.mock.respondOk
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 
+class FakeBasketApi(
+    url: Url = Url("https://api.basket.internal")
+) : ChaoticUpstream(url) {
+
+    override fun routing(): Handler = { request ->
+        when (request.url.encodedPath) {
+            "/v1/basket" -> respondOk(
+                """{"items": [{"id": "item_1", "name": "Mechanical Keyboard", "price": 120}], "total": 120}"""
+            )
+            else -> respondBadRequest()
+        }
+    }
+}
+
 class FakePaymentApi(
     url: Url = Url("https://api.payments.internal")
 ) : ChaoticUpstream(url) {
@@ -284,18 +298,6 @@ class FakePaymentApi(
         }
     }
 }
-
-class FakeUserApi(
-    url: Url = Url("https://api.users.internal")
-) : ChaoticUpstream(url) {
-
-    override fun routing(): Handler = { request ->
-        when (request.url.encodedPath) {
-            "/v1/users/me" -> respondOk("""{"id": "usr_456", "name": "Alice"}""")
-            else -> respondBadRequest()
-        }
-    }
-}
 ```
 
 ### 2. Composing Upstreams with `ReverseProxy`
@@ -303,12 +305,11 @@ class FakeUserApi(
 Pass `ChaoticUpstream` instances directly to `ReverseProxy`:
 
 ```kotlin
+val basket = FakeBasketApi()
 val payments = FakePaymentApi()
-val users = FakeUserApi()
 
-// Automatically maps payments.url.host and users.url.host
-val engine = ReverseProxy(payments, users)
-val client = HttpClient(engine)
+// Automatically maps basket.url.host and payments.url.host to their respective upstreams
+val engine = ReverseProxy(basket, payments)
 ```
 
 You can also provide explicit host-to-handler pair mappings:
@@ -320,54 +321,105 @@ val engine = ReverseProxy(
 )
 ```
 
-### 3. Outside-In Black-Box Testing with Targeted Chaos
+### 3. Outside-In Acceptance Testing with an Application Under Test
 
 ```kotlin
 import io.github.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
+import io.github.th3n3rd.ktor.client.chaos.ReverseProxy
 import io.github.th3n3rd.ktor.client.chaos.requests
 import io.github.th3n3rd.ktor.client.chaos.untilAfter
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-class CheckoutIntegrationTests {
+// 1. Domain models
+data class BasketItem(val id: String, val name: String, val price: Int)
+data class Basket(val items: List<BasketItem>, val total: Int)
 
-    private val payments = FakePaymentApi()
-    private val users = FakeUserApi()
-    private val client = HttpClient(ReverseProxy(payments, users))
+sealed interface CheckoutResult {
+    data class Success(val transactionId: String) : CheckoutResult
+    data object PaymentFailed : CheckoutResult
+}
+
+// 2. Application under test (uses outbound HttpClientEngine)
+class CheckoutApp(outboundEngine: HttpClientEngine) {
+    private val client = HttpClient(outboundEngine)
+
+    suspend fun basket(): Basket? {
+        val response = client.get("https://api.basket.internal/v1/basket")
+        return if (response.status == HttpStatusCode.OK) {
+            Basket(
+                items = listOf(BasketItem("item_1", "Mechanical Keyboard", 120)),
+                total = 120
+            )
+        } else null
+    }
+
+    suspend fun checkout(): CheckoutResult {
+        val basket = basket() ?: return CheckoutResult.PaymentFailed
+        val response = client.post("https://api.payments.internal/v1/charges") {
+            setBody("""{"amount": ${basket.total}}""")
+        }
+
+        return if (response.status == HttpStatusCode.OK) {
+            CheckoutResult.Success("ch_123")
+        } else {
+            CheckoutResult.PaymentFailed
+        }
+    }
+}
+
+// 3. Customer actor interacting with the application boundary
+class Customer(private val app: CheckoutApp) {
+    suspend fun viewBasket(): Basket? = app.basket()
+    suspend fun checkout(): CheckoutResult = app.checkout()
+}
+
+// 4. Acceptance test suite
+class CheckoutAcceptanceTests {
+
+    private val basketApi = FakeBasketApi()
+    private val paymentApi = FakePaymentApi()
+
+    // Configure the application to route outbound calls to the fake upstreams via ReverseProxy
+    private val app = CheckoutApp(
+        outboundEngine = ReverseProxy(basketApi, paymentApi)
+    )
+    private val customer = Customer(app)
 
     @Test
-    fun `processes checkout successfully`() = runTest {
-        val userResponse = client.get("https://api.users.internal/v1/users/me")
-        userResponse.status shouldBe HttpStatusCode.OK
-        userResponse.bodyAsText() shouldBe """{"id": "usr_456", "name": "Alice"}"""
+    fun `customer views basket and completes checkout successfully`() = runTest {
+        customer.viewBasket() shouldBe Basket(
+            items = listOf(BasketItem("item_1", "Mechanical Keyboard", 120)),
+            total = 120
+        )
 
-        val paymentResponse = client.post("https://api.payments.internal/v1/charges")
-        paymentResponse.status shouldBe HttpStatusCode.OK
-        paymentResponse.bodyAsText() shouldBe """{"id": "ch_123", "status": "CHARGED"}"""
+        customer.checkout() shouldBe CheckoutResult.Success("ch_123")
     }
 
     @Test
-    fun `handles payment gateway outages gracefully`() = runTest {
-        // Inject chaos ONLY into payments: fail next 2 requests with 503
-        payments.misbehave(
+    fun `customer experiences graceful degradation and recovery during payment gateway outage`() = runTest {
+        // Inject chaos ONLY into payment gateway: fail next 2 requests with 503
+        paymentApi.misbehave(
             ReturnStatus(HttpStatusCode.ServiceUnavailable) untilAfter 2.requests
         )
 
-        // Payment calls fail
-        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.ServiceUnavailable
-        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.ServiceUnavailable
+        // Checkout attempts fail during outage, but basket remains accessible and healthy
+        customer.checkout() shouldBe CheckoutResult.PaymentFailed
+        customer.checkout() shouldBe CheckoutResult.PaymentFailed
+        customer.viewBasket() shouldBe Basket(
+            items = listOf(BasketItem("item_1", "Mechanical Keyboard", 120)),
+            total = 120
+        )
 
-        // User service remains fully operational
-        client.get("https://api.users.internal/v1/users/me").status shouldBe HttpStatusCode.OK
-
-        // Payment service recovers automatically after the 2 failed requests
-        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.OK
+        // Payment gateway recovers automatically and customer retry succeeds
+        customer.checkout() shouldBe CheckoutResult.Success("ch_123")
     }
 }
 ```
