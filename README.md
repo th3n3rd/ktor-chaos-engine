@@ -24,6 +24,7 @@ drop connections, or hang indefinitely.
   stream forever?
 - **Fallback Logic & Degradation**: Does your application gracefully handle empty payloads or HTTP error codes?
 - **Multi-Stage Outages**: Can your service recover after an outage transitions from failures back to healthy responses?
+- **Outside-In Testing with Fakes**: Can you test full end-to-end flows using reusable fake upstreams without managing dynamic localhost ports or brittle mocks?
 
 ---
 
@@ -237,6 +238,136 @@ class ResilienceServiceTests {
         val third = client.get("https://api.example.com/items")
         third.status shouldBe HttpStatusCode.OK
         third.bodyAsText() shouldBe "data from server"
+    }
+}
+```
+
+---
+
+## 🌐 Fake Upstreams & ReverseProxy (Outside-In Testing)
+
+### The Problem: Brittle Mocks & Localhost Port Sprawl
+
+In integration and end-to-end testing, teams often either:
+1. **Configure ad-hoc `MockEngine` instances per test**: This litters test cases with repetitive low-level HTTP mock responses and misses the opportunity to encapsulate realistic domain behaviors.
+2. **Spin up local mock servers on dynamic localhost ports**: Replacing production hostnames with dynamic ports (`http://localhost:8080`) complicates application configuration and adds socket binding overhead.
+
+### The Solution: `ChaoticUpstream` + `ReverseProxy`
+
+`ktor-client-chaos` provides first-class primitives for building reusable **Fake Upstream APIs** routed through an in-memory **Reverse Proxy**:
+
+- **`ChaoticUpstream`**: An abstract base class for creating reusable fake server implementations (backed by Ktor's `MockEngine`) with an integrated `ChaosEngine`. Fakes encapsulate contract routing and allow per-upstream fault injection via `misbehave(...)`.
+- **`ReverseProxy`**: An `HttpClientEngine` that dispatches incoming requests by `request.url.host` entirely in-memory. It can compose multiple `ChaoticUpstream` instances or host-to-handler mappings into a single engine, enabling tests to target real hostnames (e.g. `https://api.payment.internal`) from a clean outside-in, black-box perspective.
+
+### 1. Defining Reusable `ChaoticUpstream` Services
+
+```kotlin
+import io.github.th3n3rd.ktor.client.chaos.ChaoticUpstream
+import io.ktor.client.engine.mock.respondBadRequest
+import io.ktor.client.engine.mock.respondOk
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+
+class FakePaymentApi(
+    url: Url = Url("https://api.payments.internal")
+) : ChaoticUpstream(url) {
+
+    override fun routing(): Handler = { request ->
+        when {
+            request.method == HttpMethod.Post && request.url.encodedPath == "/v1/charges" -> {
+                respondOk("""{"id": "ch_123", "status": "CHARGED"}""")
+            }
+            request.method == HttpMethod.Get && request.url.encodedPath.startsWith("/v1/charges/") -> {
+                respondOk("""{"id": "ch_123", "status": "SETTLED"}""")
+            }
+            else -> respondBadRequest()
+        }
+    }
+}
+
+class FakeUserApi(
+    url: Url = Url("https://api.users.internal")
+) : ChaoticUpstream(url) {
+
+    override fun routing(): Handler = { request ->
+        when (request.url.encodedPath) {
+            "/v1/users/me" -> respondOk("""{"id": "usr_456", "name": "Alice"}""")
+            else -> respondBadRequest()
+        }
+    }
+}
+```
+
+### 2. Composing Upstreams with `ReverseProxy`
+
+Pass `ChaoticUpstream` instances directly to `ReverseProxy`:
+
+```kotlin
+val payments = FakePaymentApi()
+val users = FakeUserApi()
+
+// Automatically maps payments.url.host and users.url.host
+val engine = ReverseProxy(payments, users)
+val client = HttpClient(engine)
+```
+
+You can also provide explicit host-to-handler pair mappings:
+
+```kotlin
+val engine = ReverseProxy(
+    "api.orders.internal" to { request -> respondOk("""{"orders": []}""") },
+    "api.inventory.internal" to { request -> respondOk("""{"available": true}""") }
+)
+```
+
+### 3. Outside-In Black-Box Testing with Targeted Chaos
+
+```kotlin
+import io.github.th3n3rd.ktor.client.chaos.ChaosBehaviours.ReturnStatus
+import io.github.th3n3rd.ktor.client.chaos.requests
+import io.github.th3n3rd.ktor.client.chaos.untilAfter
+import io.kotest.matchers.shouldBe
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+
+class CheckoutIntegrationTests {
+
+    private val payments = FakePaymentApi()
+    private val users = FakeUserApi()
+    private val client = HttpClient(ReverseProxy(payments, users))
+
+    @Test
+    fun `processes checkout successfully`() = runTest {
+        val userResponse = client.get("https://api.users.internal/v1/users/me")
+        userResponse.status shouldBe HttpStatusCode.OK
+        userResponse.bodyAsText() shouldBe """{"id": "usr_456", "name": "Alice"}"""
+
+        val paymentResponse = client.post("https://api.payments.internal/v1/charges")
+        paymentResponse.status shouldBe HttpStatusCode.OK
+        paymentResponse.bodyAsText() shouldBe """{"id": "ch_123", "status": "CHARGED"}"""
+    }
+
+    @Test
+    fun `handles payment gateway outages gracefully`() = runTest {
+        // Inject chaos ONLY into payments: fail next 2 requests with 503
+        payments.misbehave(
+            ReturnStatus(HttpStatusCode.ServiceUnavailable) untilAfter 2.requests
+        )
+
+        // Payment calls fail
+        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.ServiceUnavailable
+        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.ServiceUnavailable
+
+        // User service remains fully operational
+        client.get("https://api.users.internal/v1/users/me").status shouldBe HttpStatusCode.OK
+
+        // Payment service recovers automatically after the 2 failed requests
+        client.post("https://api.payments.internal/v1/charges").status shouldBe HttpStatusCode.OK
     }
 }
 ```
