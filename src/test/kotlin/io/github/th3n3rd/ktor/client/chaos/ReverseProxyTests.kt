@@ -86,5 +86,25 @@ class ReverseProxyTests {
         result.headers["x-test-header-name"] shouldBe "test-header-value"
         result.bodyAsText() shouldBe "test-content"
     }
+
+    @Test
+    fun `supports auto-mapping for chaotic upstreams`() = runTest {
+        val first = object : ChaoticUpstream() {
+            override fun routing(): Handler = {
+                respondOk("first")
+            }
+        }
+
+        val second = object : ChaoticUpstream() {
+            override fun routing(): Handler = {
+                respondOk("second")
+            }
+        }
+
+        val client = HttpClient(ReverseProxy(first, second))
+
+        client.get(first.url).bodyAsText() shouldBe "first"
+        client.get(second.url).bodyAsText() shouldBe "second"
+    }
 }
 
