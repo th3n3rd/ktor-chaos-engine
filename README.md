@@ -14,13 +14,13 @@ scenarios with an intuitive Kotlin DSL to verify the resilience of your HTTP int
 
 ## 🎯 Why Chaos Testing for HTTP Clients?
 
-When building distributed systems and microservices, third-party APIs and downstream services *will* fail, slow down,
+When building distributed systems and microservices, third-party APIs and upstream services *will* fail, slow down,
 drop connections, or hang indefinitely.
 
 `ktor-client-chaos` helps you test:
 
 - **Retry Mechanisms**: Does your client back off and retry on `503 Service Unavailable` or transient socket exceptions?
-- **Timeouts & Circuit Breakers**: Does your client correctly abort hung connections when downstream calls suspend or
+- **Timeouts & Circuit Breakers**: Does your client correctly abort hung connections when upstream calls suspend or
   stream forever?
 - **Fallback Logic & Degradation**: Does your application gracefully handle empty payloads or HTTP error codes?
 - **Multi-Stage Outages**: Can your service recover after an outage transitions from failures back to healthy responses?
