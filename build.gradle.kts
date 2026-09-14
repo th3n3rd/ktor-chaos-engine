@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.palantir.git.version)
@@ -34,6 +36,13 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+        events(
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.FAILED,
+        )
+    }
 }
 
 mavenPublishing {

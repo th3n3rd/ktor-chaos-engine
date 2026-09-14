@@ -20,3 +20,9 @@ current-version:
     #!/usr/bin/env bash
     set -euo pipefail
     svu current
+
+# Run all the tests
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./gradlew test
