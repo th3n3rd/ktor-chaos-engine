@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.2.3"
+        required: true
 
 jobs:
   release:
@@ -11,9 +16,18 @@ jobs:
     environment: Default
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout tag
+        if: github.event_name == 'push'
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Checkout selected tag
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.version }}
 
       - uses: actions/setup-java@v5
         with:
