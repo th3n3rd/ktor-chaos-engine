@@ -1,10 +1,13 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.palantir.git.version)
     alias(libs.plugins.vanniktech.maven.publish)
 }
 
+val gitVersion: groovy.lang.Closure<String> by extra
+
 group = "io.github.th3n3rd"
-version = "0.1.0"
+version = gitVersion()
 
 repositories {
     mavenCentral()

@@ -3,6 +3,7 @@ kotest = "6.2.4"
 kotlin = "2.4.10"
 kotlinx-coroutines = "1.10.1"
 ktor = "3.1.1"
+palantir-git-version = "5.1.0"
 slf4j = "2.0.17"
 vanniktech-maven-publish = "0.37.0"
 
@@ -22,4 +23,5 @@ slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+palantir-git-version = { id = "com.palantir.git-version", version.ref = "palantir-git-version" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
