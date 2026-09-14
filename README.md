@@ -330,71 +330,109 @@ import io.github.th3n3rd.ktor.client.chaos.requests
 import io.github.th3n3rd.ktor.client.chaos.untilAfter
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.test.runTest
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import io.ktor.server.testing.testApplication
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
 // 1. Domain models
+@Serializable
 data class BasketItem(val id: String, val name: String, val price: Int)
+
+@Serializable
 data class Basket(val items: List<BasketItem>, val total: Int)
+
+@Serializable
+data class CheckoutConfirmation(val transactionId: String)
 
 sealed interface CheckoutResult {
     data class Success(val transactionId: String) : CheckoutResult
     data object PaymentFailed : CheckoutResult
 }
 
-// 2. Application under test (uses outbound HttpClientEngine)
-class CheckoutApp(outboundEngine: HttpClientEngine) {
-    private val client = HttpClient(outboundEngine)
+// 2. Application module under test
+fun Application.checkoutModule(outboundEngine: HttpClientEngine) {
+    val outboundClient = HttpClient(outboundEngine) {
+        install(ClientContentNegotiation) { json() }
+    }
 
-    suspend fun basket(): Basket? {
-        val response = client.get("https://api.basket.internal/v1/basket")
+    install(ServerContentNegotiation) { json() }
+
+    routing {
+        get("/basket") {
+            val response = outboundClient.get("https://api.basket.internal/v1/basket")
+            if (response.status == HttpStatusCode.OK) {
+                val upstreamBasket = response.body<Basket>()
+                call.respond(upstreamBasket)
+            } else {
+                call.respond(response.status)
+            }
+        }
+
+        post("/checkout") {
+            val response = outboundClient.post("https://api.payments.internal/v1/charges")
+            if (response.status == HttpStatusCode.OK) {
+                val charge = response.body<CheckoutConfirmation>()
+                call.respond(charge)
+            } else {
+                call.respond(HttpStatusCode.PaymentRequired)
+            }
+        }
+    }
+}
+
+// 3. Customer actor interacting with the application over HTTP
+class Customer(private val client: HttpClient) {
+
+    suspend fun viewBasket(): Basket? {
+        val response = client.get("/basket")
         return if (response.status == HttpStatusCode.OK) {
-            Basket(
-                items = listOf(BasketItem("item_1", "Mechanical Keyboard", 120)),
-                total = 120
-            )
+            response.body<Basket>()
         } else null
     }
 
     suspend fun checkout(): CheckoutResult {
-        val basket = basket() ?: return CheckoutResult.PaymentFailed
-        val response = client.post("https://api.payments.internal/v1/charges") {
-            setBody("""{"amount": ${basket.total}}""")
-        }
-
+        val response = client.post("/checkout")
         return if (response.status == HttpStatusCode.OK) {
-            CheckoutResult.Success("ch_123")
+            val confirmation = response.body<CheckoutConfirmation>()
+            CheckoutResult.Success(confirmation.transactionId)
         } else {
             CheckoutResult.PaymentFailed
         }
     }
 }
 
-// 3. Customer actor interacting with the application boundary
-class Customer(private val app: CheckoutApp) {
-    suspend fun viewBasket(): Basket? = app.basket()
-    suspend fun checkout(): CheckoutResult = app.checkout()
-}
-
-// 4. Acceptance test suite
+// 4. Acceptance test suite using Ktor's testApplication
 class CheckoutAcceptanceTests {
 
     private val basketApi = FakeBasketApi()
     private val paymentApi = FakePaymentApi()
 
-    // Configure the application to route outbound calls to the fake upstreams via ReverseProxy
-    private val app = CheckoutApp(
-        outboundEngine = ReverseProxy(basketApi, paymentApi)
-    )
-    private val customer = Customer(app)
-
     @Test
-    fun `customer views basket and completes checkout successfully`() = runTest {
+    fun `customer views basket and completes checkout successfully`() = testApplication {
+        application {
+            checkoutModule(outboundEngine = ReverseProxy(basketApi, paymentApi))
+        }
+        val customer = Customer(createClient { install(ClientContentNegotiation) { json() } })
+
         customer.viewBasket() shouldBe Basket(
             items = listOf(BasketItem("item_1", "Mechanical Keyboard", 120)),
             total = 120
@@ -404,7 +442,12 @@ class CheckoutAcceptanceTests {
     }
 
     @Test
-    fun `customer experiences graceful degradation and recovery during payment gateway outage`() = runTest {
+    fun `customer experiences graceful degradation and recovery during payment gateway outage`() = testApplication {
+        application {
+            checkoutModule(outboundEngine = ReverseProxy(basketApi, paymentApi))
+        }
+        val customer = Customer(createClient { install(ClientContentNegotiation) { json() } })
+
         // Inject chaos ONLY into payment gateway: fail next 2 requests with 503
         paymentApi.misbehave(
             ReturnStatus(HttpStatusCode.ServiceUnavailable) untilAfter 2.requests
