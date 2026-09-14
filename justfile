@@ -10,9 +10,13 @@ bump version:
 
     echo "Created tag $next"
 
+# Release the current project version
+release:
+    #!/usr/bin/env bash
+    git push origin $(svu current)
+
 # Show the current project version
 current-version:
     #!/usr/bin/env bash
     set -euo pipefail
     svu current
-
