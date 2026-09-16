@@ -38,7 +38,9 @@ class ReverseProxyTests {
 
     @Test
     fun `fails with a not found when no mapping is matching`() = runTest {
-        val client = HttpClient(ReverseProxy())
+        val client = HttpClient(ReverseProxy(
+            "matching" to { respondOk("matching") },
+        ))
 
         val result = client.get("https://no-matching")
 
