@@ -263,21 +263,22 @@ In integration and end-to-end testing, teams often either:
 
 ```kotlin
 import io.github.th3n3rd.ktor.client.chaos.ChaoticUpstream
-import io.ktor.client.engine.mock.respondBadRequest
-import io.ktor.client.engine.mock.respondOk
-import io.ktor.http.HttpMethod
+import io.github.th3n3rd.ktor.client.chaos.routing
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
 import io.ktor.http.Url
+import io.ktor.http.headersOf
 
 class FakeBasketApi(
     url: Url = Url("https://api.basket.internal")
 ) : ChaoticUpstream(url) {
 
-    override fun routing(): Handler = { request ->
-        when (request.url.encodedPath) {
-            "/v1/basket" -> respondOk(
-                """{"items": [{"id": "item_1", "name": "Mechanical Keyboard", "price": 120}], "total": 120}"""
+    override fun routes(): Handler = routing {
+        get("/v1/basket") {
+            respond(
+                """{"items": [{"id": "item_1", "name": "Mechanical Keyboard", "price": 120}], "total": 120}""",
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
-            else -> respondBadRequest()
         }
     }
 }
@@ -286,15 +287,12 @@ class FakePaymentApi(
     url: Url = Url("https://api.payments.internal")
 ) : ChaoticUpstream(url) {
 
-    override fun routing(): Handler = { request ->
-        when {
-            request.method == HttpMethod.Post && request.url.encodedPath == "/v1/charges" -> {
-                respondOk("""{"id": "ch_123", "status": "CHARGED"}""")
-            }
-            request.method == HttpMethod.Get && request.url.encodedPath.startsWith("/v1/charges/") -> {
-                respondOk("""{"id": "ch_123", "status": "SETTLED"}""")
-            }
-            else -> respondBadRequest()
+    override fun routes(): Handler = routing {
+        post("/v1/charges") {
+            respond(
+                """{"transactionId": "ch_123"}""",
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
         }
     }
 }

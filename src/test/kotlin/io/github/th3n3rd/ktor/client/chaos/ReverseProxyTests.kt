@@ -92,13 +92,13 @@ class ReverseProxyTests {
     @Test
     fun `supports auto-mapping for chaotic upstreams`() = runTest {
         val first = object : ChaoticUpstream() {
-            override fun routing(): Handler = {
+            override fun routes(): Handler = {
                 respondOk("first")
             }
         }
 
         val second = object : ChaoticUpstream() {
-            override fun routing(): Handler = {
+            override fun routes(): Handler = {
                 respondOk("second")
             }
         }
