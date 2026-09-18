@@ -35,13 +35,13 @@ Add the dependency to your project's test suite:
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-testImplementation("io.github.th3n3rd:ktor-client-chaos:0.1.0")
+testImplementation("io.github.th3n3rd:ktor-client-chaos:<latest-version>")
 ```
 
 ### Gradle (Groovy DSL)
 
 ```groovy
-testImplementation 'io.github.th3n3rd:ktor-client-chaos:0.1.0'
+testImplementation 'io.github.th3n3rd:ktor-client-chaos:<latest-version>'
 ```
 
 ### Maven
