@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.util.UUID.randomUUID
 
 class ChaoticUpstreamRoutingTests {
     @Test
@@ -54,6 +55,29 @@ class ChaoticUpstreamRoutingTests {
         client.delete("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "delete"
         client.head("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "head"
         client.options("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "options"
+    }
+
+    @Test
+    fun `extract templated segments into the requests attributes`() = runTest {
+        val upstream = object : ChaoticUpstream(url = Url("https://templated-route-matching")) {
+            override fun routes(): Handler = routing {
+                get("/tests/{testId}/results/{resultId}") { respondOk("get - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+                post("/tests/{testId}/results/{resultId}") { respondOk("post - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+                put("/tests/{testId}/results/{resultId}") { respondOk("put - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+                delete("/tests/{testId}/results/{resultId}") { respondOk("delete - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+                head("/tests/{testId}/results/{resultId}") { respondOk("head - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+                options("/tests/{testId}/results/{resultId}") { respondOk("options - ${it.parameters["testId"]} - ${it.parameters["resultId"]}") }
+            }
+        }
+
+        val client = HttpClient(ReverseProxy(upstream))
+
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.get("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "get - $testId - $resultId" }
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.post("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "post - $testId - $resultId" }
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.put("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "put - $testId - $resultId" }
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.delete("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "delete - $testId - $resultId" }
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.head("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "head - $testId - $resultId" }
+        (randomUUID() to randomUUID()).let { (testId, resultId) -> client.options("https://templated-route-matching/tests/$testId/results/${resultId}").bodyAsText() shouldBe "options - $testId - $resultId" }
     }
 
     @Test

@@ -1,6 +1,7 @@
 package io.github.th3n3rd.ktor.client.chaos
 
 import io.github.th3n3rd.ktor.client.chaos.ChaoticUpstream.Handler
+import io.github.th3n3rd.ktor.client.chaos.Routing.Route.Companion.RoutingAttributes
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -11,6 +12,7 @@ import io.ktor.http.HttpMethod.Companion.Options
 import io.ktor.http.HttpMethod.Companion.Post
 import io.ktor.http.HttpMethod.Companion.Put
 import io.ktor.http.HttpStatusCode.Companion.NotFound
+import io.ktor.util.*
 import io.ktor.utils.io.*
 import java.util.*
 
@@ -68,7 +70,8 @@ class Routing {
     }
 
     fun build(): Handler = { request ->
-        routes.firstOrNull { request.method == it.method && it.pathPattern.matches(request.url.encodedPath) }
+        routes
+            .firstOrNull { it.matches(request) }
             ?.handler(this, request)
             ?: orElse(this, request)
     }
@@ -78,8 +81,36 @@ class Routing {
         val path: String,
         val handler: Handler
     ) {
-        val pathPattern: Regex = path
-            .replace(Regex("""\{[^}]+\}"""), "[^/]+")
+        private val parameterNames = TemplatedPathPattern
+            .findAll(path)
+            .map { it.groupValues[1] }
+            .toList()
+
+        private val pathPattern = TemplatedPathPattern
+            .replace(path, "([^/]+)")
             .let { Regex("^$it$") }
+
+        fun matches(request: HttpRequestData): Boolean {
+            if (request.method != method) {
+                return false
+            }
+
+            val match = pathPattern.matchEntire(request.url.encodedPath)
+                ?: return false
+
+            request.attributes.put(
+                RoutingAttributes,
+                parameterNames.zip(match.groupValues.drop(1)).toMap()
+            )
+
+            return true
+        }
+
+        companion object {
+            private val TemplatedPathPattern = Regex("""\{([^}]+)\}""")
+            val RoutingAttributes = AttributeKey<Map<String, String>>("RoutingAttributes")
+        }
     }
 }
+
+val HttpRequestData.parameters get() = attributes[RoutingAttributes]
