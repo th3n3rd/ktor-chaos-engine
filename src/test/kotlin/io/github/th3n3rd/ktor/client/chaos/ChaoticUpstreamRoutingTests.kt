@@ -34,6 +34,29 @@ class ChaoticUpstreamRoutingTests {
     }
 
     @Test
+    fun `matches route by method and templated path`() = runTest {
+        val upstream = object : ChaoticUpstream(url = Url("https://templated-route-matching")) {
+            override fun routes(): Handler = routing {
+                get("/tests/{testId}/results") { respondOk("get") }
+                post("/tests/{testId}/results") { respondOk("post") }
+                put("/tests/{testId}/results") { respondOk("put") }
+                delete("/tests/{testId}/results") { respondOk("delete") }
+                head("/tests/{testId}/results") { respondOk("head") }
+                options("/tests/{testId}/results") { respondOk("options") }
+            }
+        }
+
+        val client = HttpClient(ReverseProxy(upstream))
+
+        client.get("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "get"
+        client.post("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "post"
+        client.put("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "put"
+        client.delete("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "delete"
+        client.head("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "head"
+        client.options("https://templated-route-matching/tests/foo/results").bodyAsText() shouldBe "options"
+    }
+
+    @Test
     fun `no matching route results into a not found by default`() = runTest {
         val upstream = object : ChaoticUpstream(url = Url("https://route-not-matching")) {
             override fun routes(): Handler = routing {

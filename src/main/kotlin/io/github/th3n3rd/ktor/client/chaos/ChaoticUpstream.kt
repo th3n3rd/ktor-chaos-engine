@@ -68,7 +68,7 @@ class Routing {
     }
 
     fun build(): Handler = { request ->
-        routes.firstOrNull { request.method == it.method && request.url.encodedPath == it.path }
+        routes.firstOrNull { request.method == it.method && it.pathPattern.matches(request.url.encodedPath) }
             ?.handler(this, request)
             ?: orElse(this, request)
     }
@@ -77,5 +77,9 @@ class Routing {
         val method: HttpMethod,
         val path: String,
         val handler: Handler
-    )
+    ) {
+        val pathPattern: Regex = path
+            .replace(Regex("""\{[^}]+\}"""), "[^/]+")
+            .let { Regex("^$it$") }
+    }
 }
