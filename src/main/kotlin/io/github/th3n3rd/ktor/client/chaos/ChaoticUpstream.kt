@@ -37,6 +37,7 @@ fun ChaoticUpstream.routing(block: Routing.() -> Unit): Handler {
 
 class Routing {
     private val routes = mutableListOf<Route>()
+    private var orElse: Handler = { respondError(NotFound) }
 
     fun get(path: String, handler: Handler) {
         routes += Route(Get, path, handler)
@@ -62,10 +63,14 @@ class Routing {
         routes += Route(Options, path, handler)
     }
 
+    fun orElse(handler: Handler) {
+        orElse = handler
+    }
+
     fun build(): Handler = { request ->
         routes.firstOrNull { request.method == it.method && request.url.encodedPath == it.path }
             ?.handler(this, request)
-            ?: respondError(NotFound)
+            ?: orElse(this, request)
     }
 
     data class Route(
