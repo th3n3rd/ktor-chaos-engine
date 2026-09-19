@@ -41,6 +41,10 @@ class Routing {
     private val routes = mutableListOf<Route>()
     private var orElse: Handler = { respondError(NotFound) }
 
+    fun route(method: HttpMethod, path: String, handler: Handler) {
+        routes += Route(method, path, handler)
+    }
+
     fun get(path: String, handler: Handler) {
         routes += Route(Get, path, handler)
     }
