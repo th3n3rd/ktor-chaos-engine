@@ -12,8 +12,10 @@ import io.ktor.http.HttpMethod.Companion.Options
 import io.ktor.http.HttpMethod.Companion.Post
 import io.ktor.http.HttpMethod.Companion.Put
 import io.ktor.http.HttpStatusCode.Companion.NotFound
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import kotlinx.serialization.json.Json
 import java.util.*
 
 abstract class ChaoticUpstream(
@@ -118,3 +120,18 @@ class Routing {
 }
 
 val HttpRequestData.parameters get() = attributes[RoutingAttributes]
+
+suspend inline fun <reified T> HttpRequestData.receive(json: Json = Json): T =
+    json.decodeFromString<T>(String(body.toByteArray()))
+
+inline fun <reified T> MockRequestHandleScope.respondJson(
+    consent: T,
+    status: HttpStatusCode = OK,
+    json: Json = Json
+) = respond(
+    json.encodeToString(consent),
+    status,
+    headersOf(
+        HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()),
+    )
+)

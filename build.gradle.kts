@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.palantir.git.version)
     alias(libs.plugins.vanniktech.maven.publish)
 }
@@ -18,6 +19,7 @@ repositories {
 dependencies {
     api(libs.ktor.client.core)
     api(libs.ktor.client.mock)
+    api(libs.kotlinx.serialization.json)
     testImplementation(libs.ktor.client.cio)
     testImplementation(libs.ktor.client.okhttp)
     testImplementation(libs.ktor.client.apache)
@@ -26,6 +28,7 @@ dependencies {
     testImplementation(libs.ktor.server.cio)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.assertions.json)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.slf4j.nop)
 }
