@@ -6,7 +6,7 @@ bump version:
     set -euo pipefail
 
     next="$(svu {{ version }})"
-    git tag -a "$next" -m "Release $next"
+    git tag -s -a "$next" -m "Release $next"
 
     echo "Created tag $next"
 
